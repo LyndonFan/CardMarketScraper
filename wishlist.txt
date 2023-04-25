@@ -1,0 +1,15 @@
+1 Blasphemous Act (voc) 143
+1 Brainstorm (cst) 61
+1 Chaos Warp (2x2) 105
+1 Chemister's Insight (c19) 80
+1 Curiosity (8ed) 72
+1 Faithless Looting (c14) 175
+1 Goblin Electromancer (dds) 22
+1 Guttersnipe (plist) 367
+1 Izzet Signet (c20) 243
+1 Psychosis Crawler (moc) 371
+1 Reliquary Tower (plg20) 1
+1 Sky Diamond (voc) 167
+1 Tandem Lookout (mm3) 53
+1 Wizard Class (plist) 765
+1 Young Pyromancer (mb1) 1105

@@ -7,6 +7,7 @@ def summarize(fname: str) -> None:
     print(f"{len(df)} total offers")
     df["price"] = df["price"].str.replace("\n","").str.replace(" €.*$", "", regex=True)
     df["price"] = df["price"].str.replace(",",".").astype(float)
+    df.to_csv("data_processed.csv", index=False)
     sellers_summary = df.groupby(["seller_name"])["name"].agg(["count", "nunique", set])
     sellers_summary = sellers_summary.reset_index()
     sellers_summary = sellers_summary.sort_values(by="nunique", ascending=False)
@@ -30,7 +31,7 @@ def summarize(fname: str) -> None:
     cols = ["name", "num_sellers", "avg_price", "min_price", "q1_price", "median_price", "q3_price"]
     card_summary = pd.DataFrame(card_summary_vals, columns=cols)
     print(card_summary)
-    card_summary.to_csv("card_summary.csv", index=False)
+    card_summary.to_csv("summary_cards.csv", index=False)
 
 if __name__ == "__main__":
     import sys

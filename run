@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+echo Starting scraping
+python scrape.py $1
+echo "--------------------"
+echo Starting summarizing
+python summarize.py data_raw.csv
+echo "--------------------"
+echo Starting optimizing
+python summarize.py data_raw.csv

@@ -139,7 +139,7 @@ def main(filename: str):
         ]
         df_rows.extend(new_vs)
     df = pd.DataFrame(df_rows)
-    df.to_csv('scraped_data.csv', index=False)
+    df.to_csv('data_raw.csv', index=False)
 
 if __name__ == "__main__":
     import sys

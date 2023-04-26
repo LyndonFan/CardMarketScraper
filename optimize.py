@@ -7,6 +7,8 @@ from typing import List
 # i.e. royal mail 2nd class
 # could be changed if may hit higher tier of weight
 SHIPPING_COST = 1.19
+# max time (seconds) the optimizer can take
+MAX_SOLVE_TIME = 300
 # probably not needed?
 ZERO_TOL = 1e-5
 
@@ -67,31 +69,34 @@ def create_model(df: pd.DataFrame) -> mip.Model:
 
     m.objective = mip.xsum(objective_vals)
     for _, row in df.iterrows():
+        # not choose seller -> can't choose corresponding offer
         m += xs[int(row["offer_number"])] <= ys[int(row["seller"])]
 
     card_constraints = df.groupby("card")["offer_number"].agg(list).reset_index()
     for _, row in card_constraints.iterrows():
+        # must buy >=1 copy of that card 
+        # (constraint would be tight anyways, left as >= for convenience)
         m += mip.xsum([xs[i] for i in row['offer_number']]) >= 1
     
     return m
 
 def solve(m: mip.Model) -> mip.Model:
+    # erm not really sure what this is, copied from quickstart page
+    # maybe max allowed diff from current value to theoretical minimum?
     m.max_gap = 2
-    status = m.optimize(max_seconds=300)
+    
+    status = m.optimize(max_seconds=MAX_SOLVE_TIME)
     if status == mip.OptimizationStatus.OPTIMAL:
-        print('optimal solution cost {} found'.format(m.objective_value))
+        print(f'Minimal cost {m.objective_value:.02} found')
     elif status == mip.OptimizationStatus.FEASIBLE:
-        print('sol.cost {} found, best possible: {}'.format(m.objective_value, m.objective_bound))
+        print(f'Sol cost {m.objective_value} found, best possible: {m.objective_bound}')
     elif status == mip.OptimizationStatus.NO_SOLUTION_FOUND:
-        print('no feasible solution found, lower bound is: {}'.format(m.objective_bound))
-    if status == mip.OptimizationStatus.OPTIMAL or status == mip.OptimizationStatus.FEASIBLE:
-        print('solution:')
-        for v in m.vars:
-            if abs(v.x) > ZERO_TOL: # only printing non-zeros
-                print('{} : {}'.format(v.name, v.x))
+        print(f'No feasible solution found, lower bound is: {m.objective_bound}')
     return m
 
-def decode(m: mip.Model, df: pd.DataFrame, sellers: List[str], cards: List[str]) -> None:
+def decode_results(
+    m: mip.Model, df: pd.DataFrame, sellers: List[str], cards: List[str]
+) -> None:
     keep_offers = [
         v.name for v in m.vars
         if 'offer' in v.name and v.x >= 1-ZERO_TOL
@@ -111,7 +116,7 @@ def main(df: pd.DataFrame):
     model.write("model_unsolved.lp")
     model = solve(model)
     model.write("model_solved.lp")
-    decode(model, df, sellers, cards)
+    decode_results(model, df, sellers, cards)
 
 
 

@@ -2,7 +2,12 @@ import mip
 import pandas as pd
 from typing import List
 
-SHIPPING_COST = 1.10
+# TODO: make this dynamic?
+# for now it's basic UK to UK postage cost
+# i.e. royal mail 2nd class
+# could be changed if may hit higher tier of weight
+SHIPPING_COST = 1.19
+# probably not needed?
 ZERO_TOL = 1e-5
 
 def preprocess(df: pd.DataFrame) -> pd.DataFrame:
@@ -18,8 +23,6 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = df[["seller_name", "name", "price"]]
     df.columns = ["seller", "card", "price"]
-    df["price"] = df["price"].str.replace("\n","").str.replace(" €.*$", "", regex=True)
-    df["price"] = df["price"].str.replace(",",".").astype(float)
     df = df.groupby(["seller", "card"])["price"].min().reset_index()
     sellers_vc = df["seller"].value_counts()
     repeated_sellers = sellers_vc[sellers_vc>1].index

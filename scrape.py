@@ -26,7 +26,7 @@ def startup(driver: uc.Chrome):
     time.sleep(2)
 
 def search(driver: uc.Chrome, card_name: str) -> str:
-    name = card_name.replace("-","").replace(" ","-")
+    name = card_name.replace(", ","-").replace(" ","-")
     name = name.replace("'","").replace('"',"")
     return URL+"/"+quote_plus(name, safe="")
 

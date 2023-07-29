@@ -65,14 +65,16 @@ def get_results(driver: uc.Chrome, product_url: str) -> List:
     if not sellers:
         return []
     expansion_symbols = driver.find_elements(By.XPATH, table_path + "//a[contains(@class, 'expansion-symbol')]")
+    offer_rows = driver.find_elements(By.XPATH, table_path + "//div[contains(@class, 'article-row')]")
     prices = driver.find_elements(By.XPATH, table_path + "//div[contains(@class, 'price-container')]")
     offers = driver.find_elements(By.XPATH, table_path + "//div[contains(@class, 'col-offer')]//div[contains(@class, 'amount-container')]")
     res = []
-    for seller, sym, price, offer in zip(sellers, expansion_symbols, prices, offers):
-        res_dict = {}
+    for row, seller, sym, price, offer in zip(offer_rows, sellers, expansion_symbols, prices, offers):
+        res_dict = {"offer_link": driver.current_url}
         if not seller.text:
             print(f"{seller} at {seller.location} doesn't have a name(?), skipping")
             continue
+        res_dict["article_id"] = row.get_attribute('id')
         res_dict['seller_name'] = seller.text
         res_dict['seller_link'] = seller.get_attribute('href')
         try:

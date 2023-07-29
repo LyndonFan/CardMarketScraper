@@ -1,6 +1,6 @@
 import mip
 import pandas as pd
-from typing import List
+from typing import List, Dict
 
 # TODO: make this dynamic?
 # for now it's basic UK to UK postage cost
@@ -23,8 +23,8 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame
     """
-    df = df[["seller_name", "name", "price"]]
-    df.columns = ["seller", "card", "price"]
+    df = df.rename(columns={"seller_name": "seller", "name": "card"})
+    link_lookup = df["seller_link"].to_dict()
     df = df.groupby(["seller", "card"])["price"].min().reset_index()
     sellers_vc = df["seller"].value_counts()
     repeated_sellers = sellers_vc[sellers_vc>1].index
@@ -45,8 +45,8 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     df["seller"] = df["seller"].map(seller_lookup.get).astype("int32")
     df["card"] = df["card"].map(card_lookup.get).astype("int32")
     df.index.name = "offer_number"
-    df = df.reset_index()
-    return df, sellers, cards
+    df = df[["seller", "card", "price"]].reset_index()
+    return df, sellers, cards, link_lookup
 
 def create_model(df: pd.DataFrame) -> mip.Model:
     n_sellers = df["seller"].max()+1
@@ -95,8 +95,8 @@ def solve(m: mip.Model) -> mip.Model:
     return m
 
 def decode_results(
-    m: mip.Model, df: pd.DataFrame, sellers: List[str], cards: List[str]
-) -> None:
+    m: mip.Model, df: pd.DataFrame, sellers: List[str], cards: List[str], link_lookup: Dict[int, str]
+) -> pd.DataFrame:
     keep_offers = [
         v.name for v in m.vars
         if 'offer' in v.name and v.x >= 1-ZERO_TOL
@@ -105,18 +105,21 @@ def decode_results(
     decoded_df = df.copy()
     sellers_dict = {i:v for i,v in enumerate(sellers)}
     cards_dict = {i:v for i,v in enumerate(cards)}
-    decoded_df["seller"] = decoded_df["seller"].map(sellers_dict.get)
-    decoded_df["card"] = decoded_df["card"].map(cards_dict.get)
-    print(decoded_df[decoded_df["offer_number"].isin(offer_rows)])
+    res = decoded_df[decoded_df["offer_number"].isin(offer_rows)]
+    res["seller"] = res["seller"].map(sellers_dict.get)
+    res["card"] = res["card"].map(cards_dict.get)
+    res["seller_link"] = res["offer_number"].map(link_lookup.get)
+    return res
 
 def main(df: pd.DataFrame):
-    df, sellers, cards = preprocess(df)
+    df, sellers, cards, link_lookup = preprocess(df)
     model = create_model(df)
     print(model, type(model))
     model.write("model_unsolved.lp")
     model = solve(model)
     model.write("model_solved.lp")
-    decode_results(model, df, sellers, cards)
+    res = decode_results(model, df, sellers, cards, link_lookup)
+    res.to_csv('buylist.csv', index=False)
 
 
 

@@ -1,12 +1,13 @@
 import pandas as pd
 
+
 def summarize(fname: str) -> None:
     df = pd.read_csv(fname)
     print(f"{df['name'].nunique()} unique cards")
     print(f"{df['seller_name'].nunique()} unique sellers")
     print(f"{len(df)} total offers")
-    df["price"] = df["price"].str.replace("\n","").str.replace(" €.*$", "", regex=True)
-    df["price"] = df["price"].str.replace(",",".").astype(float)
+    df["price"] = df["price"].str.replace("\n", "").str.replace(" €.*$", "", regex=True)
+    df["price"] = df["price"].str.replace(",", ".").astype(float)
     df.to_csv("data_processed.csv", index=False)
     sellers_summary = df.groupby(["seller_name"])["name"].agg(["count", "nunique", set])
     sellers_summary = sellers_summary.reset_index()
@@ -24,16 +25,31 @@ def summarize(fname: str) -> None:
         median_price = _df["price"].median()
         q3_price = _df["price"].quantile(0.75)
         vals = [
-            cname, num_sellers, mean_price,
-            min_price, q1_price, median_price, q3_price
+            cname,
+            num_sellers,
+            mean_price,
+            min_price,
+            q1_price,
+            median_price,
+            q3_price,
         ]
         card_summary_vals.append(vals)
-    cols = ["name", "num_sellers", "avg_price", "min_price", "q1_price", "median_price", "q3_price"]
+    cols = [
+        "name",
+        "num_sellers",
+        "avg_price",
+        "min_price",
+        "q1_price",
+        "median_price",
+        "q3_price",
+    ]
     card_summary = pd.DataFrame(card_summary_vals, columns=cols)
     print(card_summary)
     card_summary.to_csv("summary_cards.csv", index=False)
 
+
 if __name__ == "__main__":
     import sys
+
     fname = sys.argv[1]
     summarize(fname)

@@ -2,6 +2,9 @@
 set -e
 echo Starting scraping
 python scrape.py $1
+if [ ! -f data_raw.csv ]; then
+    exit 1
+fi
 echo "--------------------"
 echo Starting summarizing
 python summarize.py data_raw.csv

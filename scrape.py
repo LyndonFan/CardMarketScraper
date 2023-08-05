@@ -35,13 +35,21 @@ def startup(driver: uc.Chrome):
 
 
 def search(driver: uc.Chrome, card_name: str) -> str:
-    name = card_name.replace(", ", "-").replace(" ", "-")
-    name = name.replace("'", "").replace('"', "")
+    name = card_name.replace("'", "").replace('"', "")
+    # if has ", " and "-", then replace ", " and " " with "-"
+    # if has "-" but no ", ", replace "-" with " " and " " with "-"
+    # if has ", " but no "-", then replace ", " and " " with "-"
+    # otherwise replace " " with "-"
+    if ", " in name:
+        name = name.replace(", ","-")
+    elif "-" in name:
+        name = name.replace("-","")
+    name = name.replace(" ","-")
     return URL + "/" + quote_plus(name, safe="")
 
 
 def get_results(driver: uc.Chrome, product_url: str) -> List:
-    SUFFIX = "?sellerCountry=13&sellerType=1,2"
+    SUFFIX = "?sellerCountry=13&sellerReputation=4"
     url = product_url + SUFFIX
     driver.get(url)
     time.sleep(1)

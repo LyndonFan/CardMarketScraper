@@ -8,6 +8,9 @@ from urllib.parse import urljoin, quote_plus
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 URL = "https://www.cardmarket.com/en/Magic/Cards"
 
@@ -18,42 +21,23 @@ def get_driver():
 
 def startup(driver: uc.Chrome):
     driver.get(URL)
-    time.sleep(7)
     accept_xpath = "//button[contains(text(),'Accept All Cookies')]"
+    timeout = 7
     try:
-        elem = driver.find_element(By.XPATH, accept_xpath)
+        elem_present = EC.presence_of_element_located((By.XPATH, accept_xpath))
+        elem = WebDriverWait(driver, timeout).until(elem_present)
         elem.click()
-    except:
-        pass
-    time.sleep(2)
+    except TimeoutException:
+        print("Timed out waiting for page to load")
+    except NoSuchElementException:
+        print("No such element found, ignore cookie comment")
+    time.sleep(1)
 
 
 def search(driver: uc.Chrome, card_name: str) -> str:
     name = card_name.replace(", ", "-").replace(" ", "-")
     name = name.replace("'", "").replace('"', "")
     return URL + "/" + quote_plus(name, safe="")
-
-    # old approach of going to products page and finding corr element
-    # if '"' in name:
-    #     elem_xpath = f"//a[text()='{name}']"
-    # else:
-    #     elem_xpath = f'//a[text()="{name}"]'
-    # elem = driver.find_element(By.XPATH, elem_xpath)
-    # return elem.get_attributes('href')
-    # elem.click()
-    # time.sleep(3)
-
-    # old old approach of going through search bar and returning list of urls
-    # res_xpath = '/html/body/main/section/div[3]/div[2]//div[1]/a'
-    # children = driver.find_elements(By.XPATH, res_xpath)
-    # children = [c for c in children if name in c.text]
-    # urls = []
-    # for c in children:
-    #     try:
-    #         urls.append(c.get_attribute('href'))
-    #     except:
-    #         print(f"Unable to get {c} at {c.location}")
-    # return urls
 
 
 def get_results(driver: uc.Chrome, product_url: str) -> List:
@@ -102,11 +86,11 @@ def get_results(driver: uc.Chrome, product_url: str) -> List:
             continue
         try:
             res_dict["expansion"] = sym.get_attribute("data-original-title")
-        except:
+        except Exception:
             pass
         try:
             res_dict["offer"] = offer.text
-        except:
+        except Exception:
             pass
         res.append(res_dict)
     return res
@@ -140,6 +124,7 @@ def main(input_df: pd.DataFrame) -> pd.DataFrame:
         new_vs = [{**v, "name": k} for v in vs]
         df_rows.extend(new_vs)
     df = pd.DataFrame(df_rows)
+    return df
 
 
 if __name__ == "__main__":

@@ -132,38 +132,20 @@ def scrape_info(names: List[str]) -> Dict[str, List[Dict[str, str]]]:
     return full_dict
 
 
-def main(filename: str):
-    with open(filename) as f:
-        lines = f.read()
-    lines = lines.strip().split("\n")
-    print(lines)
-    row_pat = re.compile("^\d+ ([^\(\)]+) \(.*\) \d+$")
-    names = []
-    for l in lines:
-        search = row_pat.search(l)
-        if not search:
-            print(f"Unable to find card name in {l}")
-            continue
-        names.append(search.group(1))
-    print(names)
-    inp = input("Are you okay with the above? (y/n) ")
-    while not inp and inp[0].lower() not in "yn":
-        inp = input("Are you okay with the above? (y/n) ")
-    if inp[0].lower() == "n":
-        print("Okay, please edit the file.")
-        exit()
-    print(f"Okay, proceeding with {len(names)} cards")
+def main(input_df: pd.DataFrame) -> pd.DataFrame:
+    names = input_df["name"].tolist()
     res_full_dict = scrape_info(names)
     df_rows = []
     for k, vs in res_full_dict.items():
         new_vs = [{**v, "name": k} for v in vs]
         df_rows.extend(new_vs)
     df = pd.DataFrame(df_rows)
-    df.to_csv("data_raw.csv", index=False)
 
 
 if __name__ == "__main__":
     import sys
 
     fname = sys.argv[1]
-    main(fname)
+    input_df = pd.read_csv(fname)
+    res_df = main(input_df)
+    res_df.to_csv("data_raw.csv", index=False)

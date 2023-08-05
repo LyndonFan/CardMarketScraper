@@ -2,7 +2,7 @@ import re
 import pandas as pd
 
 
-def extract(filename: str) -> "pd.DataFrame | None":
+def extract(filename: str) -> pd.DataFrame:
     with open(filename) as f:
         lines = f.read()
     lines = lines.strip().split("\n")
@@ -14,7 +14,7 @@ def extract(filename: str) -> "pd.DataFrame | None":
         if not search:
             cannot_find.append(l)
             continue
-        names.append(search.group(1), search.group(2))
+        names.append([search.group(1), search.group(2)])
     print(f"Found {len(names)} names")
     if cannot_find:
         print("Unable to find cards from these lines")
@@ -24,7 +24,7 @@ def extract(filename: str) -> "pd.DataFrame | None":
         inp = input(f"Unable to recognised {inp}. Please enter y/n. ")
     if inp[0].lower() == "n":
         print("Okay, please edit the file.")
-        return None
+        return pd.DataFrame()
     return pd.DataFrame(names, columns=["quantity", "name"])
 
 
@@ -32,5 +32,5 @@ if __name__ == "__main__":
     import sys
 
     res = extract(sys.argv[1])
-    if res:
+    if not res.empty:
         res.to_csv('wishlist.csv', index=False)

@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
-echo Starting scraping
-python scrape.py $1
-if [ ! -f data_raw.csv ]; then
+echo Extracting cards
+python extract.py $1
+if [ ! -f wishlist.csv ]; then
     exit 1
 fi
+echo "--------------------"
+echo Starting scraping
+python scrape.py wishlist.csv
 echo "--------------------"
 echo Starting summarizing
 python summarize.py data_raw.csv

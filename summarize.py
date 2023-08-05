@@ -6,8 +6,14 @@ def summarize(fname: str) -> None:
     print(f"{df['name'].nunique()} unique cards")
     print(f"{df['seller_name'].nunique()} unique sellers")
     print(f"{len(df)} total offers")
-    df["price"] = df["price"].str.replace("\n", "").str.replace(" €.*$", "", regex=True)
-    df["price"] = df["price"].str.replace(",", ".").astype(float)
+    df["price"] = (
+        df["price"]
+        .str.replace("\n", "")
+        .str.replace(".", "", regex=False)
+        .str.replace(" €.*$", "", regex=True)
+        .str.replace(",", ".", regex=True)
+        .astype(float)
+    )
     df.to_csv("data_processed.csv", index=False)
     sellers_summary = df.groupby(["seller_name"])["name"].agg(["count", "nunique", set])
     sellers_summary = sellers_summary.reset_index()
@@ -16,8 +22,7 @@ def summarize(fname: str) -> None:
     print(sellers_summary.head(10))
     sellers_summary.to_csv("summary_sellers.csv", index=False)
     card_summary_vals = []
-    for gp, _df in df.groupby(["name"]):
-        cname = gp[0]
+    for cname, _df in df.groupby("name"):
         num_sellers = len(_df)
         mean_price = _df["price"].mean()
         min_price = _df["price"].min()

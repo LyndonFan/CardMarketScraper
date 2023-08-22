@@ -3,9 +3,9 @@ import pandas as pd
 import time
 from typing import Union, List, Dict
 
-import undetected_chromedriver as uc
 from urllib.parse import urljoin, quote_plus
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
@@ -16,10 +16,10 @@ URL = "https://www.cardmarket.com/en/Magic/Cards"
 
 
 def get_driver():
-    return uc.Chrome()
+    return webdriver.Chrome(service=Service())
 
 
-def startup(driver: uc.Chrome):
+def startup(driver: webdriver.Chrome):
     driver.get(URL)
     accept_xpath = "//button[contains(text(),'Accept All Cookies')]"
     timeout = 7
@@ -34,7 +34,7 @@ def startup(driver: uc.Chrome):
     time.sleep(1)
 
 
-def search(driver: uc.Chrome, card_name: str) -> str:
+def search(driver: webdriver.Chrome, card_name: str) -> str:
     name = card_name.replace("'", "").replace('"', "")
     # if has ", " and "-", then replace ", " and " " with "-"
     # if has "-" but no ", ", replace "-" with " " and " " with "-"
@@ -48,7 +48,7 @@ def search(driver: uc.Chrome, card_name: str) -> str:
     return URL + "/" + quote_plus(name, safe="")
 
 
-def get_results(driver: uc.Chrome, product_url: str) -> List:
+def get_results(driver: webdriver.Chrome, product_url: str) -> List:
     SUFFIX = "?sellerCountry=13&sellerReputation=4"
     url = product_url + SUFFIX
     driver.get(url)

@@ -51,7 +51,7 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def create_model(df: pd.DataFrame) -> mip.Model:
-    n_sellers = df["seller"].max() + 1
+    n_sellers = df["seller"].nunique()
     n_offers = len(df)
 
     m = mip.Model("MKM Optimizer")
@@ -111,7 +111,7 @@ def decode_results(
     return res
 
 
-def main(df: pd.DataFrame):
+def main(df: pd.DataFrame) -> pd.DataFrame:
     df, sellers, cards, link_lookup = preprocess(df)
     model = create_model(df)
     print(model, type(model))
@@ -119,12 +119,13 @@ def main(df: pd.DataFrame):
     model = solve(model)
     model.write("model_solved.lp")
     res = decode_results(model, df, sellers, cards, link_lookup)
-    res.to_csv("buylist.csv", index=False)
+    return res
 
 
 if __name__ == "__main__":
     import sys
 
-    fname = sys.argv[1]
-    df = pd.read_csv(fname)
-    main(df)
+    wishlist_df = pd.read_csv(sys.argv[1])
+    processed_data = pd.read_csv(sys.argv[2])
+    res = main(processed_data)
+    res.to_csv("buylist.csv", index=False)

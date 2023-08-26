@@ -13,4 +13,4 @@ echo Starting summarizing
 python summarize.py data_raw.csv
 echo "--------------------"
 echo Starting optimizing
-python optimize.py data_processed.csv
+python optimize.py wishlist.csv data_processed.csv
